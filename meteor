@@ -81,7 +81,7 @@ function install_dev_bundle {
         curl -# "$DEV_BUNDLE_URL_ROOT$TARBALL" | tar -xzf - -C "$BUNDLE_TMPDIR"
     fi
 
-    test -x "${BUNDLE_TMPDIR}/bin/node" # bomb out if it didn't work, eg no net
+#    test -x "${BUNDLE_TMPDIR}/bin/node" # bomb out if it didn't work, eg no net
 
     # Delete old dev bundle and rename the new one on top of it.
     rm -rf "$SCRIPT_DIR/dev_bundle"
@@ -132,7 +132,7 @@ fi
 # the script take precedence over $NODE_PATH; it used to be that users would
 # screw up their meteor installs by have a ~/node_modules
 
-exec "$DEV_BUNDLE/bin/node" \
+exec "/usr/bin/node" \
      --expose-gc \
      ${TOOL_NODE_FLAGS} \
      "$METEOR" "$@"
