@@ -14,54 +14,6 @@ source "$(dirname $0)/build-dev-bundle-common.sh"
 echo CHECKOUT DIR IS "$CHECKOUT_DIR"
 echo BUILDING DEV BUNDLE "$BUNDLE_VERSION" IN "$DIR"
 
-cd "$DIR"
-
-S3_HOST="s3.amazonaws.com/com.meteor.jenkins"
-
-# Update these values after building the dev-bundle-node Jenkins project.
-# Also make sure to update NODE_VERSION in generate-dev-bundle.ps1.
-NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/${NODE_TGZ}"
-echo "Downloading Node from ${NODE_URL}"
-curl "${NODE_URL}" | tar zx --strip-components 1
-
-# Download Mongo from mongodb.com
-MONGO_NAME="mongodb-${OS}-${ARCH}-${MONGO_VERSION}"
-MONGO_TGZ="${MONGO_NAME}.tgz"
-MONGO_URL="http://fastdl.mongodb.org/${OS}/${MONGO_TGZ}"
-echo "Downloading Mongo from ${MONGO_URL}"
-curl "${MONGO_URL}" | tar zx
-
-# Put Mongo binaries in the right spot (mongodb/bin)
-mkdir -p mongodb/bin
-mv "${MONGO_NAME}/bin/mongod" mongodb/bin
-mv "${MONGO_NAME}/bin/mongo" mongodb/bin
-rm -rf "${MONGO_NAME}"
-
-# export path so we use the downloaded node and npm
-export PATH="$DIR/bin:$PATH"
-
-cd "$DIR/lib"
-
-# Make node-gyp install Node headers and libraries in $DIR/.node-gyp/.
-# https://github.com/nodejs/node-gyp/blob/4ee31329e0/lib/node-gyp.js#L52
-export HOME="$DIR"
-export USERPROFILE="$DIR"
-
-# Make sure the latest version of node-gyp is installed at the top level.
-npm install node-gyp
-
-node "${DIR}/lib/node_modules/node-gyp/bin/node-gyp.js" install
-INCLUDE_PATH="${DIR}/.node-gyp/${NODE_VERSION}/include/node"
-echo "Contents of ${INCLUDE_PATH}:"
-ls -al "$INCLUDE_PATH"
-
-# Overwrite the bundled version with the latest version of npm.
-npm install "npm@$NPM_VERSION"
-
-which node
-which npm
-npm version
-
 # When adding new node modules (or any software) to the dev bundle,
 # remember to update LICENSE.txt! Also note that we include all the
 # packages that these depend on, so watch out for new dependencies when
@@ -104,15 +56,14 @@ mkdir "${DIR}/build/npm-tool-install"
 cd "${DIR}/build/npm-tool-install"
 node "${CHECKOUT_DIR}/scripts/dev-bundle-tool-package.js" >package.json
 npm install
+mkdir -p "${DIR}/lib/node_modules/"
 cp -R node_modules/* "${DIR}/lib/node_modules/"
 # Also include node_modules/.bin, so that `meteor npm` can make use of
 # commands like node-gyp and node-pre-gyp.
 cp -R node_modules/.bin "${DIR}/lib/node_modules/"
 
-cd "${DIR}/lib"
-
 # Clean up some bulky stuff.
-cd node_modules
+cd "${DIR}/lib/node_modules"
 
 # Used to delete bulky subtrees. It's an error (unlike with rm -rf) if they
 # don't exist, because that might mean it moved somewhere else and we should
@@ -126,11 +77,6 @@ delete () {
 }
 
 delete npm/test
-delete npm/node_modules/node-gyp
-pushd npm/node_modules
-ln -s ../../node-gyp ./
-popd
-
 delete sqlite3/deps
 delete sqlite3/node_modules/node-pre-gyp
 delete wordwrap/test
@@ -141,15 +87,6 @@ find . -path '*/esprima-fb/test' | xargs rm -rf
 
 cd "$DIR/lib/node_modules/fibers/bin"
 shrink_fibers
-
-# Sanity check to see if we're not breaking anything by replacing npm
-INSTALLED_NPM_VERSION=$(cat "$DIR/lib/node_modules/npm/package.json" |
-xargs -0 node -e "console.log(JSON.parse(process.argv[1]).version)")
-if [ "$INSTALLED_NPM_VERSION" != "$NPM_VERSION" ]; then
-  echo "Unexpected NPM version in lib/node_modules: $INSTALLED_NPM_VERSION"
-  echo "Update this check if you know what you're doing."
-  exit 1
-fi
 
 echo BUNDLING
 
