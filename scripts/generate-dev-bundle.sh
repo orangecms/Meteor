@@ -14,6 +14,9 @@ source "$(dirname $0)/build-dev-bundle-common.sh"
 echo CHECKOUT DIR IS "$CHECKOUT_DIR"
 echo BUILDING DEV BUNDLE "$BUNDLE_VERSION" IN "$DIR"
 
+mkdir "${DIR}/bin"
+ln -s "$(which npm)" "${DIR}/bin"
+
 # When adding new node modules (or any software) to the dev bundle,
 # remember to update LICENSE.txt! Also note that we include all the
 # packages that these depend on, so watch out for new dependencies when
