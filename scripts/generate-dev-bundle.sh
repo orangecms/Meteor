@@ -14,8 +14,11 @@ source "$(dirname $0)/build-dev-bundle-common.sh"
 echo CHECKOUT DIR IS "$CHECKOUT_DIR"
 echo BUILDING DEV BUNDLE "$BUNDLE_VERSION" IN "$DIR"
 
+# set up symlinks for a bloat-free experience
 mkdir "${DIR}/bin"
 ln -s "$(which npm)" "${DIR}/bin"
+ln -s "$(which node)" "${DIR}/bin"
+ln -s "../lib/node_modules/.bin/node-gyp" "${DIR}/bin"
 
 # When adding new node modules (or any software) to the dev bundle,
 # remember to update LICENSE.txt! Also note that we include all the
