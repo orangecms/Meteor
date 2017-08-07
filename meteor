@@ -28,6 +28,7 @@ cd "$ORIG_DIR"
 export BABEL_CACHE_DIR="$SCRIPT_DIR/.babel-cache"
 DEV_BUNDLE="$SCRIPT_DIR/dev_bundle"
 METEOR="$SCRIPT_DIR/tools/index.js"
+NODE="$DEV_BUNDLE/bin/node"
 
 # Set the nofile ulimit as high as permitted by the hard-limit/kernel
 if [ "$(ulimit -Sn)" != "unlimited" ]; then
@@ -43,7 +44,7 @@ fi
 # the script take precedence over $NODE_PATH; it used to be that users would
 # screw up their meteor installs by have a ~/node_modules
 
-exec "/usr/bin/node" \
+exec "$NODE" \
      --expose-gc \
      ${TOOL_NODE_FLAGS} \
      "$METEOR" "$@"
