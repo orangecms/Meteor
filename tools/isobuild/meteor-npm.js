@@ -60,6 +60,9 @@ meteorNpm.updateDependencies = function (packageName,
                                          packageNpmDir,
                                          npmDependencies,
                                          quiet) {
+  if (packageName === 'modules-runtime') {
+    return true;
+  }
   // we make sure to put it beside the original package dir so that
   // we can then atomically rename it. we also make sure to
   // randomize the name, in case we're bundling this package
